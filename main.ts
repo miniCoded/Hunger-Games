@@ -33,7 +33,7 @@ let days = 1;
 /**
  * Insert your players here
  */
-const player_count = 15;
+const player_count = 20;
 
 for(let i = 0; i < player_count; i++){
 	player_list.push({
