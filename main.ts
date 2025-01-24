@@ -27,9 +27,10 @@ function printSync(input: string | Uint8Array, to = Deno.stdout) {
 let player_list: Array<Player> = [];
 const getAlive = () => player_list.filter((player) => player.status[0].state == StatusEnum.ALIVE);
 const getDead = () => player_list.filter((player) => player.status[0].state == StatusEnum.DEAD);
+
 let days = 1;
 
-for(let i = 0; i < 30; i++){
+for(let i = 0; i < 15; i++){
 	player_list.push({
 		name: `${i}`,
 		kills: 0,
@@ -52,7 +53,8 @@ EventList.sort((a, b) => a.chance - b.chance);
  */
 
 while(getAlive().length > 1){
-	console.log(`------------Day ${days}------------`);
+	const day_log_message = `------------Day ${days}------------`
+	console.log(day_log_message);
 	let interacted = 0;
 	
 	player_list.sort(() => Math.random() - 0.5);
@@ -63,6 +65,7 @@ while(getAlive().length > 1){
 			status.payload(status, player);
 		});
 	});
+	console.log('-'.repeat(day_log_message.length));
 
 	const alive_ones = getAlive().length;
 	// Phase 2: pickup items (W.I.P.)
@@ -95,6 +98,10 @@ while(getAlive().length > 1){
 
 	printSync(`(${getDead().length}) \n`);
 	days += 1;
+
+	await new Promise<void>((resolve) => {
+		Deno.stdin.read(new Uint8Array(1)).then(() => resolve());
+	});
 }
 
 /**
@@ -109,8 +116,15 @@ if(getAlive().length == 0){
 	console.log("Nobody wins :(");
 } else {
 	const lucky_one = getAlive()[0];
-	console.log(`Player ${lucky_one.name} wins! (${lucky_one.kills})`);
+	let statusMessage = '';
+	if (lucky_one.status.some(status => status.state == StatusEnum.INJURED)) {
+		statusMessage = ' (while injured!)';
+	} else if (lucky_one.status.some(status => status.state == StatusEnum.POISONED)) {
+		statusMessage = ' (while poisoned!)';
+	}
+	console.log(`Player ${lucky_one.name} wins ${statusMessage}! (${lucky_one.kills})`);
 
 	const mostKills = player_list.reduce((max, player) => player.kills > max.kills ? player : max, player_list[0]);
 	console.log(`Player with most kills: ${mostKills.name} (${mostKills.kills})`);
+
 }

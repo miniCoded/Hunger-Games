@@ -64,11 +64,16 @@ export const StatusList: Array<() => Status> = [
 		return new Status(
 			StatusEnum.INJURED,
 			increment_day((self: Status, player?: Player) => {
-				if(self.days_since_effect >= 2 && typeof(player) != "undefined"){
+				if (typeof(player) != "undefined" && player.status.filter((status) => status.state == StatusEnum.INJURED).length > 1) {
+					player.status[0] = StatusList[StatusEnum.DEAD]();
+					player.status[0].payload(player.status[0], player);
+					console.log(`${player.name} has died from multiple injuries`);
+					return;
+				} else if(self.days_since_effect >= 2 && typeof(player) != "undefined"){
 					console.log(`${player.name} has died from their injuries`);
 					
 					player.status[0] = StatusList[StatusEnum.DEAD]();
-					player.status[0].payload(player.status[0]);
+					player.status[0].payload(player.status[0], player);
 				}
 			})
 		)
