@@ -116,8 +116,7 @@ export const EventList: Array<Event> = [
 
 			}],
 			["wound" , .20, `${player1.name} wounds ${player2.name}`                               , () => {
-				player2.status[0] = StatusList[StatusEnum.INJURED]();
-				player2.status[0].payload(player2.status[0]);
+				player2.status.push(StatusList[StatusEnum.INJURED]());
 			}],
 			["clean" , .40, `${player1.name} kills ${player2.name}`                                , () => {
 				player1.kills++;
@@ -149,11 +148,17 @@ export const EventList: Array<Event> = [
 		}
 
 		const Outcomes: Array<EventSubvariants> = [
-			["cliff"  , .1, `${player1.name} falls off a cliff`              , generic_ded_payload],
-			["lake"   , .3, `${player1.name} drowns while swimming in a lake`, generic_ded_payload],
-			["tree"   , .5, `${player1.name} falls off a tree`               , generic_ded_payload],
-			["eaten"  , .2, `${player1.name} is eaten by a bear`             , generic_ded_payload],
-			["suicide", .1, `${player1.name} kills themself`                 , generic_ded_payload],
+			["suicide", .01, `${player1.name} kills themself`                 , generic_ded_payload],
+			["cliff"  , .10,`${player1.name} falls off a cliff`              , generic_ded_payload],
+			["storm"  , .10, `${player1.name} is struck by lightning`         , generic_ded_payload],
+			["eaten"  , .20,`${player1.name} is eaten by a bear`             , generic_ded_payload],
+			["poison" , .20,`${player1.name} is poisoned by berries`         , () => {
+				player1.status.push(StatusList[StatusEnum.POISONED]());
+				player1.status[player1.status.length - 1].days_since_effect++;
+			}],
+			["lake"   , .30,`${player1.name} drowns while swimming in a lake`, generic_ded_payload],
+			["mud"    , .30, `${player1.name} sinks in the mud`               , generic_ded_payload],
+			["tree"   , .50,`${player1.name} falls off a tree`               , generic_ded_payload],
 		]
 		
 		const event = Event.pick_event(Outcomes) as EventSubvariants;

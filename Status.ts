@@ -13,7 +13,7 @@ export enum StatusEnum {
 	ALIVE,   // All ALIVE players are still in the game
 	DEAD ,   // All DEAD players are no longer playing
 	INJURED, // INJURED players die in 5 days
-	POISONED // POISONED players have a 40% chance of dying next round and a 10% chance of healing
+	POISONED // POISONED players have a 30% chance of dying next round and a 10% chance of healing
 }
 
 type PayloadType = (self: Status, player?: Player) => void;
@@ -54,7 +54,7 @@ export const StatusList: Array<() => Status> = [
 			StatusEnum.DEAD,
 			increment_day((self: Status, player?: Player) => {
 				if(typeof(player) != "undefined"){
-					player.status = [StatusList[1]()];
+					player.status = [StatusList[StatusEnum.DEAD]()];
 				}
 			})
 		)
@@ -64,11 +64,10 @@ export const StatusList: Array<() => Status> = [
 		return new Status(
 			StatusEnum.INJURED,
 			increment_day((self: Status, player?: Player) => {
-				if(self.days_since_effect > 2 && typeof(player) != "undefined"){
+				if(self.days_since_effect >= 2 && typeof(player) != "undefined"){
 					console.log(`${player.name} has died from their injuries`);
 					
-					player.status = player.status.filter((status) => status.state != StatusEnum.INJURED);
-					player.status[0] = StatusList[1]();
+					player.status[0] = StatusList[StatusEnum.DEAD]();
 					player.status[0].payload(player.status[0]);
 				}
 			})
@@ -83,11 +82,12 @@ export const StatusList: Array<() => Status> = [
 
 				if(typeof(player) != "undefined"){
 					if(their_fate < .1){
-						player.status.filter((status) => status.state != StatusEnum.POISONED);
+						player.status = player.status.filter((status) => status.state != StatusEnum.POISONED);
 						console.log(`${player.name} is no longer poisoned`);
-					} else if(their_fate < .4){
-						player.status = [StatusList[1]()];
-						player.status[0].payload(player?.status[0], player);
+					} else if(their_fate < .3){
+						player.status[0] = StatusList[StatusEnum.DEAD]();
+						player.status[0].payload(player.status[0], player);
+
 						console.log(`${player.name} has died from poisoning`);
 					} 
 				}

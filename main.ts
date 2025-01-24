@@ -29,7 +29,7 @@ const getAlive = () => player_list.filter((player) => player.status[0].state == 
 const getDead = () => player_list.filter((player) => player.status[0].state == StatusEnum.DEAD);
 let days = 1;
 
-for(let i = 0; i < 100; i++){
+for(let i = 0; i < 30; i++){
 	player_list.push({
 		name: `${i}`,
 		kills: 0,
@@ -54,16 +54,17 @@ EventList.sort((a, b) => a.chance - b.chance);
 while(getAlive().length > 1){
 	console.log(`------------Day ${days}------------`);
 	let interacted = 0;
-	const alive_ones = getAlive().length;
-
+	
 	player_list.sort(() => Math.random() - 0.5);
-
+	
 	// Pahse 1: update the statuses
 	player_list.forEach((player) => {
 		player.status.forEach((status) => {
 			status.payload(status, player);
 		});
 	});
+
+	const alive_ones = getAlive().length;
 	// Phase 2: pickup items (W.I.P.)
 	
 	// Phase 3: select an event
@@ -85,11 +86,13 @@ while(getAlive().length > 1){
 		if(player.status[0].state == StatusEnum.ALIVE)
 			player.interacted = false;
 	});
+
 	console.log(`************ + Dead + ************`);
 	getDead().forEach((player) => {
 		if(player.status[0].days_since_effect == 0)
 			printSync(player.name + " ");
 	});
+
 	printSync(`(${getDead().length}) \n`);
 	days += 1;
 }
