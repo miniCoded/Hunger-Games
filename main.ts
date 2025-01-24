@@ -30,7 +30,12 @@ const getDead = () => player_list.filter((player) => player.status[0].state == S
 
 let days = 1;
 
-for(let i = 0; i < 15; i++){
+/**
+ * Insert your players here
+ */
+const player_count = 15;
+
+for(let i = 0; i < player_count; i++){
 	player_list.push({
 		name: `${i}`,
 		kills: 0,
