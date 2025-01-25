@@ -10,12 +10,12 @@
  */
 
 import { Player, Group } from "./Player.ts";
-import { Status, StatusEnum, StatusList } from "./Status.ts";
+import { StatusEnum, StatusList } from "./Status.ts";
 
 type PayloadType = (player_list: Array<Player>, group_list?: Array<Group>, interactions?: number, days?: number) => [string, number];
-type EventSubvariants = [string, number, string, () => void];
+type EventSubvariants = [string, number, string, (player?: Player) => void];
 
-function select_random_player(players: Array<Player>): Player{
+export function select_random_player(players: Array<Player>): Player{
 	return players[Math.floor(Math.random() * players.length)];
 }
 
@@ -23,8 +23,14 @@ function filter_alive(players: Array<Player>): Array<Player>{
 	return players.filter((player) => player.status[0].state == StatusEnum.ALIVE);
 }
 
-function filter_dead(players: Array<Player>): Array<Player>{
+function _filter_dead(players: Array<Player>): Array<Player>{
 	return players.filter((player) => player.status[0].state == StatusEnum.DEAD);
+}
+
+const generic_die = (player?: Player) => {
+	if(typeof(player) != "undefined"){
+		player.status = [StatusList[StatusEnum.DEAD]()];
+	}
 }
 
 export class Event {
@@ -62,7 +68,7 @@ export class Event {
 
 export const EventList: Array<Event> = [
 	// Generic "do nothing" event for 1 player.
-	new Event(.6, 1,"idle", (players: Array<Player>) => {
+	new Event(.60, 1,"idle", (players: Array<Player>) => {
 		players = filter_alive(players);
 
 		let player1: Player = select_random_player(players);
@@ -90,7 +96,7 @@ export const EventList: Array<Event> = [
 	}),
 
 	// Generic "player kills player" event for 2 players.
-	new Event(0.25, 2, "murder", (players: Array<Player>) => {
+	new Event(0.10, 2, "murder", (players: Array<Player>) => {
 		players = filter_alive(players);
 		let player1: Player = select_random_player(players);
 		let player2: Player = select_random_player(players);
@@ -100,28 +106,22 @@ export const EventList: Array<Event> = [
 
 		const Outcomes: Array<EventSubvariants> = [
 			["both"  , .05, `${player1.name} attempted to kill ${player2.name}. Both die instead`  , () => {
-				player1.status[0] = StatusList[StatusEnum.DEAD]();
-				player2.status[0] = StatusList[StatusEnum.DEAD]();
-
-				player1.status[0].payload(player1.status[0], player1);
-				player2.status[0].payload(player2.status[0], player2);
+				generic_die(player1);
+				generic_die(player2);
 			}],
 			["karma" , .10, `${player1.name} tries to kill ${player2.name}, but kills them instead`, () => {
 				player2.kills++;
-				player1.status[0] = StatusList[StatusEnum.DEAD]();
-				player1.status[0].payload(player1.status[0], player1);
-
+				generic_die(player1);
 			}],
 			["escape", .15, `${player1.name} attempts to kill ${player2.name}, but them escapes`   , () => {
 
 			}],
-			["wound" , .20, `${player1.name} wounds ${player2.name}`                               , () => {
+			["wound" , .20, `${player1.name} has fatally wounded ${player2.name}`                  , () => {
 				player2.status.push(StatusList[StatusEnum.INJURED]());
 			}],
 			["clean" , .40, `${player1.name} kills ${player2.name}`                                , () => {
 				player1.kills++;
-				player2.status[0] = StatusList[StatusEnum.DEAD]();
-				player2.status[0].payload(player2.status[0], player2);
+				generic_die(player2);
 
 			}],
 		];
@@ -135,42 +135,35 @@ export const EventList: Array<Event> = [
 
 		return [event[2], 2];
 	}),
-	// Generic "player dies", but no murder
-	new Event(0.2, 1, "kill", (players: Array<Player>) => {
+	// Generic "something bad happens" to a single player
+	new Event(0.15, 1, "kill", (players: Array<Player>) => {
 		players = filter_alive(players);
 		let player1: Player = select_random_player(players);
 		while(player1.interacted)
 			player1 = select_random_player(players)
 
-		const generic_ded_payload = () => {
-			player1.status[0] = StatusList[StatusEnum.DEAD]();
-			player1.status[0].payload(player1.status[0], player1)
-		}
-
 		const Outcomes: Array<EventSubvariants> = [
-			["suicide" , .01, `${player1.name} kills themself`                           , generic_ded_payload],
-			["storm"   , .05, `${player1.name} is struck by lightning`                   , generic_ded_payload],
-			["cliff"   , .10,`${player1.name} falls off a cliff`                         , generic_ded_payload],
+			["suicide" , .01, `${player1.name} kills themself`                           , generic_die],
+			["storm"   , .02, `${player1.name} is struck by lightning`                   , generic_die],
+			["cliff"   , .10,`${player1.name} falls off a cliff`                         , generic_die],
 			["lit"     , .10,`While trying to lit a fire, ${player1.name} burns themself`, () => {
 				player1.status.push(StatusList[StatusEnum.INJURED]());
 			}],
-			["eaten"   , .20,`${player1.name} is eaten by a bear`                        , generic_ded_payload],
+			["eaten"   , .20,`${player1.name} is eaten by a bear`                        , generic_die],
 			["berries" , .20,`${player1.name} is poisoned by berries`                    , () => {
 				player1.status.push(StatusList[StatusEnum.POISONED]());
-				player1.status[player1.status.length - 1].days_since_effect++;
 			}],
 			["snake"   , .20,`${player1.name} is bitten by a snake`                      , () => {
 				player1.status.push(StatusList[StatusEnum.POISONED]());
-				player1.status[player1.status.length - 1].days_since_effect++;
 			}],
-			["lake"    , .30,`${player1.name} drowns while swimming in a lake`           , generic_ded_payload],
-			["mud"     , .30, `${player1.name} sinks in the mud`                         , generic_ded_payload],
-			["tree"    , .50,`${player1.name} falls off a tree`                          , generic_ded_payload],
+			["lake"    , .30,`${player1.name} drowns while swimming in a lake`           , generic_die],
+			["mud"     , .30, `${player1.name} sinks in the mud`                         , generic_die],
+			["tree"    , .50,`${player1.name} falls off a tree`                          , generic_die],
 		]
 		
 		const event = Event.pick_event(Outcomes) as EventSubvariants;
 
-		event[3]();
+		event[3](player1);
 
 		player1.interacted = true;
 
@@ -178,7 +171,7 @@ export const EventList: Array<Event> = [
 	}),
 	// Player comes back from the dead
 	new Event(0.0, 1, "reanimation", (players: Array<Player>) => {
-		const player_list_dead: Array<Player> = filter_dead(players);
+		// const player_list_dead: Array<Player> = filter_dead(players);
 		
 		const player1: Player = players[Math.floor(Math.random() * players.length)];
 
