@@ -24,7 +24,7 @@ function printSync(input: string | Uint8Array, to = Deno.stdout) {
  * 
  */
 
-let player_list: Array<Player> = [];
+const player_list: Array<Player> = [];
 const getAlive = () => player_list.filter((player) => player.status[0].state == StatusEnum.ALIVE);
 const getDead = () => player_list.filter((player) => player.status[0].state == StatusEnum.DEAD);
 
@@ -33,14 +33,19 @@ let days = 1;
 /**
  * Insert your players here
  */
-const player_count = 15;
+const player_count = 10;
 
 for(let i = 0; i < player_count; i++){
 	player_list.push({
-		name: `${i}`,
-		kills: 0,
-		status: [StatusList[0]()],
-		interacted: false
+		name:              `${i}`,
+		kills:             0,
+		status:            [StatusList[0]()],
+		interacted:        false,
+
+		inventory:         [],
+
+		days_since_hunger: 0,
+		days_since_thirst: 0,
 	});
 }
 
@@ -64,12 +69,15 @@ while(getAlive().length > 1){
 	
 	player_list.sort(() => Math.random() - 0.5);
 	
-	// Pahse 1: update the statuses
-	player_list.forEach((player) => {
-		player.status.forEach((status) => {
-			status.payload(status, player);
+	// Pahse 1: update the statuses. Only after day 1.
+	if(days > 1){
+		player_list.forEach((player) => {
+			player.status.forEach((status) => {
+				status.payload(status, player);
+			});
 		});
-	});
+	}
+
 	console.log('-'.repeat(day_log_message.length));
 
 	const alive_ones = getAlive().length;
@@ -101,12 +109,12 @@ while(getAlive().length > 1){
 			printSync(player.name + " ");
 	});
 
-	printSync(`(${getDead().length}) \n`);
+	printSync(`(${getDead().filter((player) => player.status[0].days_since_effect == 0).length}) \n`);
 	days += 1;
 
-	await new Promise<void>((resolve) => {
+	/*await new Promise<void>((resolve) => {
 		Deno.stdin.read(new Uint8Array(1)).then(() => resolve());
-	});
+	});*/
 }
 
 /**
