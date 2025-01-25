@@ -7,7 +7,8 @@
  * Statuses are debuffs every player has and they indicate how the player is. Some will kill it, other may not.
  */
 
-import { Player } from "./Player.ts"
+import { Player } from "./Player.ts";
+import { ItemType } from "./Inventory.ts";
 
 export enum StatusEnum {
 	ALIVE   , // All ALIVE players are still in the game
@@ -44,6 +45,8 @@ const increment_day = (payload: PayloadType) => {
 
 const generic_die = (player: Player) => {
 	player.status = [StatusList[StatusEnum.DEAD]()];
+	player.status[0].payload(player.status[0], player);
+	player.status[0].days_since_effect = 0;
 }
 
 export const StatusList: Array<() => Status> = [
@@ -79,17 +82,29 @@ export const StatusList: Array<() => Status> = [
 	() => new Status(
 			StatusEnum.INJURED,
 			increment_day((self: Status, player?: Player) => {
-				if (typeof(player) != "undefined" && player.status.filter((status) => status.state == StatusEnum.INJURED).length > 1) {
-					
-					generic_die(player);
+				
+				if(typeof(player) != "undefined"){
+					const has_sew = player.inventory.findIndex((item) => item.name == "sew");
+					const has_medkit = player.inventory.findIndex((item) => item.name == "medkit");
 
-					console.log(`${player.name} has died from multiple injuries`);
-					return;
-				} else if(self.days_since_effect > 2 && typeof(player) != "undefined"){
-					console.log(`${player.name} has died from their injuries`);
-					
-					generic_die(player);
+					if(has_sew >= 0 || has_medkit >= 0){
+						console.log(`${player.name} healed their wounds`);
+						player.inventory.splice(Math.max(has_sew, has_medkit), 1);
+						player.status = player.status.filter((status) => status.state != StatusEnum.INJURED);
+
+					} else if (player.status.filter((status) => status.state == StatusEnum.INJURED).length > 1) {
+						
+						generic_die(player);
+	
+						console.log(`${player.name} has died from multiple injuries`);
+						return;
+					} else if(self.days_since_effect > 2 && typeof(player) != "undefined"){
+						console.log(`${player.name} has died from their injuries`);
+						
+						generic_die(player);
+					}
 				}
+
 			})
 		),
 	// POISONED status
@@ -99,7 +114,15 @@ export const StatusList: Array<() => Status> = [
 				const their_fate = Math.random();
 
 				if(typeof(player) != "undefined"){
-					if(their_fate < .1){
+					const has_herbs = player.inventory.findIndex((item) => item.name == "herbs");
+					const has_medkit = player.inventory.findIndex((item) => item.name == "medkit");
+
+					if(has_herbs >= 0 || has_medkit >= 0){
+						console.log(`${player.name} took medicine. They feel way better`);
+						player.inventory.splice(Math.max(has_herbs, has_medkit), 1);
+						player.status = player.status.filter((status) => status.state != StatusEnum.POISONED);
+
+					} else if(their_fate < .1){
 						player.status = player.status.filter((status) => status.state != StatusEnum.POISONED);
 						console.log(`${player.name} is no longer poisoned`);
 					} else if(their_fate < .3){
@@ -117,7 +140,14 @@ export const StatusList: Array<() => Status> = [
 		StatusEnum.HUNGER,
 		increment_day((_: Status, player?: Player) => {
 			if(typeof(player) != "undefined"){
-				if(player.days_since_hunger > 4 && Math.random() < (-(1/(.25 * (player.days_since_hunger-3))) + 1)){
+				const has_food = player.inventory.findIndex((item) => item.what_item == ItemType.FOOD);
+
+				if(has_food >= 0){
+					player.inventory.splice(has_food, 1);
+
+					player.status = player.status.filter((status) => status.state != StatusEnum.HUNGER);
+					player.days_since_hunger = 0;
+				} else if(player.days_since_hunger > 4 && Math.random() < (-(1/(.25 * (player.days_since_hunger-3))) + 1)){
 					
 					generic_die(player);
 
@@ -134,7 +164,15 @@ export const StatusList: Array<() => Status> = [
 		StatusEnum.THIRST,
 		increment_day((_: Status, player?: Player) => {
 			if(typeof(player) != "undefined"){
-				if(player.days_since_thirst > 3 && Math.random() < (-(1/(player.days_since_thirst-2)) + 1)){
+				const has_water = player.inventory.findIndex((item) => item.what_item == ItemType.DRINK);
+
+				if(has_water >= 0){
+
+					player.inventory.splice(has_water, 1);
+
+					player.status = player.status.filter((status) => status.state != StatusEnum.THIRST);
+					player.days_since_thirst = 0;
+				} else if(player.days_since_thirst > 3 && Math.random() < (-(1/(player.days_since_thirst-2)) + 1)){
 
 					generic_die(player);
 

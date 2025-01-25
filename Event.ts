@@ -15,7 +15,7 @@ import { StatusEnum, StatusList } from "./Status.ts";
 type PayloadType = (player_list: Array<Player>, group_list?: Array<Group>, interactions?: number, days?: number) => [string, number];
 type EventSubvariants = [string, number, string, (player?: Player) => void];
 
-function select_random_player(players: Array<Player>): Player{
+export function select_random_player(players: Array<Player>): Player{
 	return players[Math.floor(Math.random() * players.length)];
 }
 
@@ -144,7 +144,7 @@ export const EventList: Array<Event> = [
 
 		const Outcomes: Array<EventSubvariants> = [
 			["suicide" , .01, `${player1.name} kills themself`                           , generic_die],
-			["storm"   , .05, `${player1.name} is struck by lightning`                   , generic_die],
+			["storm"   , .02, `${player1.name} is struck by lightning`                   , generic_die],
 			["cliff"   , .10,`${player1.name} falls off a cliff`                         , generic_die],
 			["lit"     , .10,`While trying to lit a fire, ${player1.name} burns themself`, () => {
 				player1.status.push(StatusList[StatusEnum.INJURED]());
