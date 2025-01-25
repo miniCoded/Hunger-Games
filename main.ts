@@ -97,7 +97,6 @@ while(getAlive().length > 1){
 		]
 
 		let amount = 0;
-		let new_items = [];
 
 		for(let i = 0; i < Outcomes.length; i++){
 			const lucky_one = Outcomes[i];
