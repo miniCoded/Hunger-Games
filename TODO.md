@@ -9,6 +9,7 @@
 - Modularize Pick Up phase so it can also store its own events.
 
 # Extra features.
+- Add more goofy events
 - Fine-tune settings so rounds can last longer.
 - Add events that affect more than 2 players.
 - Add a CLI to control settings of the game.
