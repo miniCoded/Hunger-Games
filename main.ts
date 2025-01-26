@@ -90,9 +90,9 @@ while(getAlive().length > 1){
 	getAlive().forEach((player) => {
 		const Outcomes = [
 			[3 , .01],
-			[-1, .03], // Steal
-			[2 , .05],
-			[1 , .15],
+			[-1, .05], // Steal
+			[2 , .10],
+			[1 , .20],
 			[0 , 1.0],
 		]
 
