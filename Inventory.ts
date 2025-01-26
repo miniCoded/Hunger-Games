@@ -22,8 +22,8 @@ export const ItemList: Array<() => Item> = [
 	() => {return {what_item: ItemType.UTILITY , name: "medkit", wear: 1, chance: .01};},
 	() => {return {what_item: ItemType.UTILITY , name: "sew"   , wear: 1, chance: .02};},
 	() => {return {what_item: ItemType.UTILITY , name: "herbs" , wear: 1, chance: .02};},
-	() => {return {what_item: ItemType.FOOD    , name: "food"  , wear: 1, chance: .20};},
-	() => {return {what_item: ItemType.DRINK   , name: "water" , wear: 1, chance: .30};},
+	() => {return {what_item: ItemType.FOOD    , name: "food"  , wear: 1, chance: .35};},
+	() => {return {what_item: ItemType.DRINK   , name: "water" , wear: 1, chance: .40};},
 ]
 
 export const pick_random_item = (amount: number) => {

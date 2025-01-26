@@ -49,6 +49,10 @@ const generic_die = (player: Player) => {
 	player.status[0].days_since_effect = 0;
 }
 
+const smooth_chance = (x: number, x0: number, k: number) => {
+	return 1 / (1 + Math.exp(-k * (x - x0)));
+}
+
 export const StatusList: Array<() => Status> = [
 	// ALIVE status
 	// Being alive needs food and water
@@ -98,7 +102,7 @@ export const StatusList: Array<() => Status> = [
 	
 						console.log(`${player.name} has died from multiple injuries`);
 						return;
-					} else if(self.days_since_effect > 2 && typeof(player) != "undefined"){
+					} else if(self.days_since_effect >= 2 && typeof(player) != "undefined"){
 						console.log(`${player.name} has died from their injuries`);
 						
 						generic_die(player);
@@ -147,7 +151,7 @@ export const StatusList: Array<() => Status> = [
 
 					player.status = player.status.filter((status) => status.state != StatusEnum.HUNGER);
 					player.days_since_hunger = 0;
-				} else if(player.days_since_hunger > 4 && Math.random() < (-(1/(.25 * (player.days_since_hunger-3))) + 1)){
+				} else if(player.days_since_hunger > 4 && Math.random() < smooth_chance(player.days_since_hunger, 10, 1)){
 					
 					generic_die(player);
 
@@ -172,7 +176,7 @@ export const StatusList: Array<() => Status> = [
 
 					player.status = player.status.filter((status) => status.state != StatusEnum.THIRST);
 					player.days_since_thirst = 0;
-				} else if(player.days_since_thirst > 3 && Math.random() < (-(1/(player.days_since_thirst-2)) + 1)){
+				} else if(player.days_since_thirst > 3 && Math.random() < smooth_chance(player.days_since_thirst, 5, 1.5)){
 
 					generic_die(player);
 
