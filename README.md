@@ -1,3 +1,5 @@
+# Hunger Games
+
 The structure of the Hunger Games is like this:
 
 1. Generate an amout of players.
@@ -40,3 +42,9 @@ The way players interact with each other is:
    4. Go event by event. Apply the formula and get a random number from 1 to n_luck.
       1. If the number is 1, then apply the event. If not, then continue.
       2. Select the last event (most common) if no other events were choosen.
+
+## Branches
+
+- `main`:    The game with no experimental features, as-is.
+- `feature`: Experimental features of the game, either already integrated or not.
+- `play`:    Fine-tuning of tghe settings of the game.
